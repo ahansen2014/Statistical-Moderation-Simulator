@@ -1,5 +1,5 @@
 '''
-VCAA STAT MOD simulator ver 0.2
+VCAA STAT MOD simulator ver 0.3
 This application has been developed privately and is designed to allow teachers to simulate an approximate
 stat mod process.  The simulation does fix the zero, first quartile, median, third quartile and top reference points
 as described in VCAA documents, however, it uses a linear mapping for the scores between these points and therefore
@@ -11,9 +11,12 @@ smooth the data.  This has not been done in this simulation.
 Changelog:
 Version 0.2, 10/5/22, updated exam top calc to account for multiple students with the same top SAC score but different
 exam scores.
+Version 0.3, 11/5/22, added a save to csv function.  Added a reset to default function.
 '''
 from tkinter import *
+from tkinter.filedialog import asksaveasfilename
 from numpy import quantile, mean
+import csv
 
 # Some initial arrays to provide initial data.  The names are from a random name generator.
 names = ['Aydin Mata', 'Nico Horton', 'Georgie Burgess', 'Natalie Atkinson', 'Lexie Vaughn', 'Augustus Summers',
@@ -22,9 +25,9 @@ names = ['Aydin Mata', 'Nico Horton', 'Georgie Burgess', 'Natalie Atkinson', 'Le
          'Omari Vaughan', 'Peter Hudson', 'Randy Lam', 'Charles Warren', 'Camryn Garcia', 'Jamir Baker',
          'Harley Crawford', 'Ashtyn Lucas']
 
-sac_scores = [95, 92, 85, 83, 78, 75, 68, 66, 65, 61, 60, 59, 58, 55, 52, 51, 50, 45, 41, 39, 36, 34, 32, 31, 25]
-mod_scores = [95, 92, 85, 83, 78, 75, 68, 66, 65, 61, 60, 59, 58, 55, 52, 51, 50, 45, 41, 39, 36, 34, 32, 31, 25]
-exam_scores = [96, 95, 91, 87, 83, 82, 77, 75, 74, 70, 68, 67, 66, 65, 63, 61, 60, 58, 57, 56, 54, 53, 52, 51, 51]
+default_sac_scores = [95, 92, 85, 83, 78, 75, 68, 66, 65, 61, 60, 59, 58, 55, 52, 51, 50, 45, 41, 39, 36, 34, 32, 31, 25]
+default_mod_scores = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+default_exam_scores = [96, 95, 91, 87, 83, 82, 77, 75, 74, 70, 68, 67, 66, 65, 63, 61, 60, 58, 57, 56, 54, 53, 52, 51, 51]
 
 # Arrays to hold the UI elements.  It's nice that Python allows arrays to hold objects like UI elements
 number_labels = []
@@ -32,6 +35,9 @@ name_labels = []
 sac_entrys = []
 mod_labels = []
 exam_entrys = []
+sac_scores = [95, 92, 85, 83, 78, 75, 68, 66, 65, 61, 60, 59, 58, 55, 52, 51, 50, 45, 41, 39, 36, 34, 32, 31, 25]
+mod_scores = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+exam_scores = [96, 95, 91, 87, 83, 82, 77, 75, 74, 70, 68, 67, 66, 65, 63, 61, 60, 58, 57, 56, 54, 53, 52, 51, 51]
 
 def find_exam_top(sac_scores, exam_scores):
     '''
@@ -146,6 +152,30 @@ def calculate():
     for i in range(25):
         mod_labels[i].config(text=str(mod_scores[i]))
 
+def save():
+
+    filename = asksaveasfilename(defaultextension='csv')
+    with open(filename, 'w') as file:
+        writer = csv.writer(file)
+        header = ['number', 'name', 'SAC score', 'Mod score', 'Exam score']
+        writer.writerow(header)
+        for i in range(25):
+            number = number_labels[i].cget('text')
+            name = name_labels[i].cget('text')
+            sac = sac_entrys[i].get()
+            mod = mod_labels[i].cget('text')
+            exam = exam_entrys[i].get()
+            row = [number, name, sac, mod, exam]
+            writer.writerow(row)
+
+def reset():
+    for i in range(25):
+        sac_entrys[i].delete(0, END)
+        sac_entrys[i].insert(0,str(default_sac_scores[i]))
+        exam_entrys[i].delete(0, END)
+        exam_entrys[i].insert(0, str(default_exam_scores[i]))
+
+
 
 
 main = Tk()
@@ -170,15 +200,21 @@ for i in range(25):
     sac_entrys.append(Entry(main, width=5))
     sac_entrys[i].grid(row=i+3, column=3)
     sac_entrys[i].delete(0, END)
-    sac_entrys[i].insert(0, str(sac_scores[i]))
-    mod_labels.append(Label(main, text=str(mod_scores[i])))
+    sac_entrys[i].insert(0, str(default_sac_scores[i]))
+    mod_labels.append(Label(main, text=str(default_mod_scores[i])))
     mod_labels[i].grid(row=i+3, column=4)
     exam_entrys.append(Entry(main, width=5))
     exam_entrys[i].grid(row=i + 3, column=5)
     exam_entrys[i].delete(0, END)
-    exam_entrys[i].insert(0, str(exam_scores[i]))
+    exam_entrys[i].insert(0, str(default_exam_scores[i]))
 
 calc_button = Button(main, text='Calculate', command=calculate)
 calc_button.grid(row=29, column=2)
+
+save_button = Button(main, text='Save', command=save)
+save_button.grid(row=29, column=3)
+
+reset_button = Button(main, text='Reset', command=reset)
+reset_button.grid(row=29, column=4)
 
 mainloop()
